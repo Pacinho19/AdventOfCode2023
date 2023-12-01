@@ -28,7 +28,6 @@ public class Day1Part2 implements CalculateI {
         return FileUtils.readTxt(new File(filePath))
                 .stream()
                 .map(this::extractDigitWords)
-                .peek(System.out::println)
                 .reduce(0L, Long::sum);
     }
 
