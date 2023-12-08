@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 public class Day8Part2Test extends TestCase {
 
     public void testCalculate() {
-        assertEquals(0L, new Day8Part2().calculate("challenges\\day8\\example.txt"));
+        assertEquals(6L, new Day8Part2().calculate("challenges\\day8\\example3.txt"));
     }
 
 
