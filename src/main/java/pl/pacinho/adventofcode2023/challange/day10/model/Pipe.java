@@ -26,11 +26,11 @@ public enum Pipe {
             new Neighbor(NeighborType.NORTH, List.of("7", "F", "|"))
             , new Neighbor(NeighborType.WEST, List.of("L", "F", "-"))
     )),
-    CURVE_E_S("7", List.of(
+    CURVE_W_S("7", List.of(
             new Neighbor(NeighborType.SOUTH, List.of("|", "L", "J"))
             , new Neighbor(NeighborType.WEST, List.of("-", "F", "L"))
     )),
-    CURVE_W_S("F", List.of(
+    CURVE_E_S("F", List.of(
             new Neighbor(NeighborType.SOUTH, List.of("|", "L", "J"))
             , new Neighbor(NeighborType.EAST, List.of("J", "7", "-"))
     )),

@@ -45,33 +45,50 @@ public class Day10Part1 implements CalculateI {
     }
 
     private void moveToNextPipe(Pair<Integer, Integer> location, Neighbor neighbor) {
-        if (getPipe(location) == Pipe.START && distance > 0L)
-            return;
+        while (true) {
+            if (getPipe(location) == Pipe.START && distance > 0L)
+                return;
 
-        Pair<Integer, Integer> neighborPipeLocation = getNeighborPipeLocation(neighbor.type(), location.key(), location.value());
-        String locationString = getLocationString(neighborPipeLocation);
-        Pipe pipe = getPipe(neighborPipeLocation);
+            final Pair<Integer, Integer> neighborPipeLocation = getNeighborPipeLocation(neighbor.type(), location.key(), location.value());
+            String locationString = getLocationString(neighborPipeLocation);
+            Pipe pipe = getPipe(neighborPipeLocation);
 
-        System.out.println(locationString);
 
-        neighbor.pipes()
-                .stream()
-                .filter(neighborPipe -> pipe.getSign().equals(neighborPipe) && !visited.contains(locationString))
-                .forEach(neighborPipe -> {
+            String neighborPipe2 = neighbor.pipes()
+                    .stream()
+                    .filter(neighborPipe -> pipe.getSign().equals(neighborPipe) && !visited.contains(locationString))
+                    .findFirst()
+                    .orElse(null);
 
-                    distance++;
+            if (neighborPipe2 == null)
+                continue;
 
-                    Long aLong = moveMap.computeIfAbsent(locationString, key -> distance);
-                    if (distance < aLong)
-                        moveMap.put(locationString, distance);
+            distance++;
 
-                    visited.add(locationString);
+            Long aLong = moveMap.computeIfAbsent(locationString, key -> distance);
+            if (distance < aLong)
+                moveMap.put(locationString, distance);
 
-                    Pipe.findBySign(neighborPipe).getNeighbors()
-                            .forEach(neigh -> moveToNextPipe(neighborPipeLocation, neigh));
+            visited.add(locationString);
 
-                });
+            final Neighbor newNeighbor = Pipe.findBySign(neighborPipe2).getNeighbors()
+                    .stream()
+                    .filter(neigh -> isValidNeighbor(neigh, neighborPipeLocation.key(), neighborPipeLocation.value()))
+                    .findFirst()
+                    .orElse(null);
 
+            if(newNeighbor==null)
+                return;
+
+            location = neighborPipeLocation;
+            neighbor = newNeighbor;
+        }
+    }
+
+    private boolean isValidNeighbor(Neighbor neigh, Integer y, Integer x) {
+        Pair<Integer, Integer> neighborPipeLocation = getNeighborPipeLocation(neigh.type(), y, x);
+        return isConnectedWithNeighbor(neigh, y, x)
+               && !visited.contains(getLocationString(neighborPipeLocation));
     }
 
     private String getLocationString(Pair<Integer, Integer> loc) {
