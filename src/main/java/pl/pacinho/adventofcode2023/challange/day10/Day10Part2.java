@@ -7,11 +7,12 @@ import pl.pacinho.adventofcode2023.challange.day10.tools.NeighborTools;
 import pl.pacinho.adventofcode2023.model.Pair;
 import pl.pacinho.adventofcode2023.utils.FileUtils;
 
+import java.awt.*;
 import java.io.File;
 import java.util.*;
+import java.util.List;
 
-public class Day10Part1 implements CalculateI {
-
+public class Day10Part2 implements CalculateI {
     private NeighborTools neighborTools;
     private Pipe[][] map;
     private Map<String, Long> moveMap;
@@ -20,7 +21,7 @@ public class Day10Part1 implements CalculateI {
 
     @Override
     public long calculate(String filePath) {
-        moveMap = new HashMap<>();
+        moveMap = new LinkedHashMap<>();
         map = FileUtils.readTxt(new File(filePath))
                 .stream()
                 .map(this::parseLine)
@@ -30,14 +31,47 @@ public class Day10Part1 implements CalculateI {
 
         goMove();
 
-        return moveMap.values()
-                .stream()
-                .max(Long::compareTo)
-                .orElse(0L);
+        return countTiles();
+    }
+
+    private long countTiles() {
+        Polygon polygon = initPolygonPoints();
+        long counter = 0L;
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+
+                if (moveMap.containsKey(NeighborTools.getLocationString(new Pair<>(i, j))) || neighborTools.getAllNeighbors(i, j).size() < 4)
+                    continue;
+
+                if (isPointInPolygon(new Point(j, i), polygon))
+                    counter++;
+            }
+        }
+
+        return counter;
+    }
+
+    private boolean isPointInPolygon(Point p, Polygon polygon) {
+        return polygon.contains(p);
+    }
+
+    private Polygon initPolygonPoints() {
+        List<String> locations = new ArrayList<>(moveMap.keySet());
+
+        Polygon polygon = new Polygon();
+
+        for (int i = 0; i < locations.size(); i++) {
+            String[] split = locations.get(i).split(",");
+            polygon.addPoint(Integer.parseInt(split[1]), Integer.parseInt(split[0]));
+        }
+
+        return polygon;
     }
 
     private void goMove() {
         Pair<Pipe, Pair<Integer, Integer>> startPipe = checkStartPipeLocation();
+        moveMap.put(NeighborTools.getLocationString(startPipe.value()), 0L);
+
         startPipe.key()
                 .getNeighbors()
                 .forEach(neighbor -> {
@@ -45,6 +79,7 @@ public class Day10Part1 implements CalculateI {
                     visited = new ArrayList<>();
                     moveToNextPipe(startPipe.value(), neighbor);
                 });
+
     }
 
     private void moveToNextPipe(Pair<Integer, Integer> location, Neighbor neighbor) {
@@ -52,7 +87,7 @@ public class Day10Part1 implements CalculateI {
             if (neighborTools.getPipe(location) == Pipe.START && distance > 0L)
                 return;
 
-            final Pair<Integer, Integer> neighborPipeLocation =neighborTools.getNeighborPipeLocation(neighbor.type(), location.key(), location.value());
+            final Pair<Integer, Integer> neighborPipeLocation = neighborTools.getNeighborPipeLocation(neighbor.type(), location.key(), location.value());
             String locationString = NeighborTools.getLocationString(neighborPipeLocation);
             Pipe pipe = neighborTools.getPipe(neighborPipeLocation);
 
@@ -124,7 +159,7 @@ public class Day10Part1 implements CalculateI {
 
     public static void main(String[] args) {
         System.out.println(
-                new Day10Part1().calculate("challenges\\day10\\input.txt")
+                new Day10Part2().calculate("challenges\\day10\\input.txt")
         );
     }
 
