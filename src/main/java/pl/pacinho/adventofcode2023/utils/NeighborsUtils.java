@@ -1,5 +1,6 @@
 package pl.pacinho.adventofcode2023.utils;
 
+import pl.pacinho.adventofcode2023.challange.day11.model.PositionDto;
 import pl.pacinho.adventofcode2023.model.NeighborDto;
 import pl.pacinho.adventofcode2023.model.Pair;
 
@@ -20,6 +21,14 @@ public class NeighborsUtils {
             new Pair<>(1, 1)
     );
 
+    private static final List<Pair<Integer, Integer>> NEIGHBORS_SIMPLE = List.of(
+            new Pair<>(-1, 0),
+            new Pair<>(0, -1),
+            //SELF
+            new Pair<>(0, 1),
+            new Pair<>(1, 0)
+    );
+
     private final int width;
     private final int height;
 
@@ -30,6 +39,14 @@ public class NeighborsUtils {
 
     public List<NeighborDto> getNeighbors(int y, int x) {
         return NEIGHBORS.stream()
+                .map(pair -> parseNeighborDto(pair, y, x))
+                .filter(Objects::nonNull)
+                .toList();
+
+    }
+
+    public List<NeighborDto> getNeighborsSimple(int y, int x) {
+        return NEIGHBORS_SIMPLE.stream()
                 .map(pair -> parseNeighborDto(pair, y, x))
                 .filter(Objects::nonNull)
                 .toList();
