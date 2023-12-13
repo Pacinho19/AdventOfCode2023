@@ -3,6 +3,7 @@ package pl.pacinho.adventofcode2023.challange.day11.tools;
 import pl.pacinho.adventofcode2023.model.Pair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class BFS {
 
     // function to print the shortest distance and path
     // between source vertex and destination vertex
-    public int printShortestDistance(int s, int dest) {
+    public List<Integer> printShortestDistance(int s, int dest) {
         // predecessor[i] array stores predecessor of
         // i and distance array stores distance of i
         // from s
@@ -40,7 +41,7 @@ public class BFS {
 
         if (!BFS(adj, s, dest, v, pred, dist)) {
 //            System.out.println("Given source and destination are not connected");
-            return 0;
+            return Collections.emptyList();
         }
 
         // LinkedList to store path
@@ -56,12 +57,17 @@ public class BFS {
 //        System.out.println("Shortest path length is: " + dist[dest]);
 
         // Print path
-//        System.out.println("Path is ::");
-//        for (int i = path.size() - 1; i >= 0; i--) {
-//            System.out.print(path.get(i) + " ");
-//        }
+        List<Integer> out = new ArrayList<>();
+        //System.out.print("Path is ::");
+        for (int i = path.size() - 1; i >= 0; i--) {
+            Integer idx = path.get(i);
+            out.add(idx);
+            //System.out.print(idx + " ");
+        }
+        //System.out.println();
 
-        return  dist[dest];
+        return  out;
+//        return dist[dest];
     }
 
     // a modified version of BFS that stores predecessor

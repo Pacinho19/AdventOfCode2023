@@ -2,7 +2,6 @@ package pl.pacinho.adventofcode2023.challange.day11;
 
 import pl.pacinho.adventofcode2023.CalculateI;
 import pl.pacinho.adventofcode2023.challange.day11.model.PositionDto;
-import pl.pacinho.adventofcode2023.challange.day11.tools.AreaDijkstry;
 import pl.pacinho.adventofcode2023.challange.day11.tools.BFS;
 import pl.pacinho.adventofcode2023.model.Pair;
 import pl.pacinho.adventofcode2023.utils.FileUtils;
@@ -12,28 +11,37 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class Day11Part1_BFS implements CalculateI {
+public class Day11Part1 implements CalculateI {
+
+    private int colCount;
+
+    private final int EXTENDED_VALUE;
+
+    public Day11Part1(int extendedValue) {
+        EXTENDED_VALUE = extendedValue;
+    }
 
     @Override
     public long calculate(String filePath) {
         String[][] cosmic = FileUtils.readTxt(new File(filePath))
                 .stream()
-                .map(Day11Part1_BFS::extendRow)
-                .flatMap(List::stream)
+                .map(s -> s.split(""))
                 .toArray(String[][]::new);
 
-        PositionDto[][] extendedCosmic = extendColumn(cosmic);
+        colCount = cosmic[0].length;
+        PositionDto[][] extendedCosmic = parseToPositionArr(cosmic);
         //ArrayUtils.print2DArray(cosmic);
+
+        List<Integer> extendedRows = getExtendedRows(cosmic);
+        List<Integer> extendedCols = getExtendedCols(cosmic);
 
         List<String> checked = new ArrayList<>();
         List<PositionDto> galactic = getGalactic(extendedCosmic);
 
         BFS bfs = new BFS(extendedCosmic.length * extendedCosmic[0].length, getVertexConnection(extendedCosmic));
-
-        int colCount =  extendedCosmic[0].length;
-
         long counter = 0;
         for (int i = 0; i < galactic.size() - 1; i++) {
             PositionDto startPosition = galactic.get(i);
@@ -49,8 +57,10 @@ public class Day11Part1_BFS implements CalculateI {
                 int source = (startPosition.row() * colCount + startPosition.col());
                 int target = (endPosition.row() * colCount + endPosition.col());
 
-                List<Integer> count = bfs.printShortestDistance(source, target);
-                counter += count.size()-1;
+                List<Integer> path = bfs.printShortestDistance(source, target);
+                long count = path.stream().filter(extendedRows::contains).count() * (EXTENDED_VALUE-1);
+                long count2 = path.stream().filter(extendedCols::contains).count() * (EXTENDED_VALUE-1);
+                counter += path.size()-1 + count + count2;
 
                 checked.add(getCheckedPositionString(startPosition, endPosition));
                 checked.add(getCheckedPositionString(endPosition, startPosition));
@@ -60,9 +70,42 @@ public class Day11Part1_BFS implements CalculateI {
         return counter;
     }
 
-    private List<Pair<Integer, Integer>> getVertexConnection(PositionDto[][] extendedCosmic) {
-        int colCount = extendedCosmic[0].length;
+    private List<Integer> getExtendedCols(String[][] cosmic) {
+        List<Integer> toExtend = new ArrayList<>();
+        for (int x = 0; x < cosmic[0].length; x++) {
+            boolean doExtend = true;
+            for (int y = 0; y < cosmic.length; y++) {
+                if (cosmic[y][x].equals("#")) {
+                    doExtend = false;
+                    break;
+                }
+            }
 
+            if (doExtend)
+                toExtend.add(x);
+        }
+
+        return toExtend.stream()
+                .map(colIdx -> IntStream.range(0, cosmic.length).boxed().map(rowIdx -> rowIdx * colCount + colIdx).toList())
+                .flatMap(List::stream)
+                .toList();
+
+    }
+
+    private List<Integer> getExtendedRows(String[][] cosmic) {
+        List<Integer> toExtend = new ArrayList<>();
+        for (int y = 0; y < cosmic.length; y++) {
+            if (!String.join("", cosmic[y]).contains("#"))
+                toExtend.add(y);
+        }
+
+        return toExtend.stream()
+                .map(rowIdx -> IntStream.range(0, colCount).boxed().map(colIdx -> rowIdx * colCount + colIdx).toList())
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    private List<Pair<Integer, Integer>> getVertexConnection(PositionDto[][] extendedCosmic) {
         NeighborsUtils neighborsUtils = new NeighborsUtils(colCount, extendedCosmic.length);
 
         List<Pair<Integer, Integer>> out = new ArrayList<>();
@@ -89,39 +132,7 @@ public class Day11Part1_BFS implements CalculateI {
                 .toList();
     }
 
-    private PositionDto[][] extendColumn(String[][] cosmic) {
-        List<List<String>> out = new ArrayList<>();
-
-        List<Integer> colToExtend = new ArrayList<>();
-        for (int x = 0; x < cosmic[0].length; x++) {
-            boolean doExtend = true;
-            for (int y = 0; y < cosmic.length; y++) {
-                if (cosmic[y][x].equals("#")) {
-                    doExtend = false;
-                    break;
-                }
-            }
-
-            if (doExtend)
-                colToExtend.add(x);
-        }
-
-        for (int y = 0; y < cosmic.length; y++) {
-
-            List<String> row = out.size() > y ? out.get(y) : new ArrayList<>();
-            for (int x = 0; x < cosmic[y].length; x++) {
-                row.add(cosmic[y][x]);
-                if (colToExtend.contains(x))
-                    row.add(".");
-            }
-
-            out.add(row);
-        }
-
-        String[][] extendedArr = out.stream()
-                .map(list -> list.toArray(String[]::new))
-                .toArray(String[][]::new);
-
+    private PositionDto[][] parseToPositionArr(String[][] extendedArr) {
         List<List<PositionDto>> out2 = new ArrayList<>();
         for (int y = 0; y < extendedArr.length; y++) {
             List<PositionDto> row = new ArrayList<>();
@@ -136,19 +147,9 @@ public class Day11Part1_BFS implements CalculateI {
                 .toArray(PositionDto[][]::new);
     }
 
-    private static List<String[]> extendRow(String s) {
-        List<String[]> out = new ArrayList<>();
-        String[] split = s.split("");
-
-        out.add(split);
-        if (!s.contains("#"))
-            out.add(split);
-        return out;
-    }
-
     public static void main(String[] args) {
         System.out.println(
-                new Day11Part1_BFS().calculate("challenges\\day11\\input.txt")
+                new Day11Part1(2).calculate("challenges\\day11\\input.txt")
         );
     }
 }

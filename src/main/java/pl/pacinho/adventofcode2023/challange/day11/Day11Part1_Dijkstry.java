@@ -31,8 +31,6 @@ public class Day11Part1_Dijkstry implements CalculateI {
             PositionDto startPosition = galactic.get(i);
             AreaDijkstry areaDijkstry = new AreaDijkstry(extendedCosmic, startPosition);
 
-            System.out.println("areaDijkstry for position " + startPosition + "end");
-
             for (int j = 0; j < galactic.size(); j++) {
                 if (i == j) continue;
 
@@ -46,8 +44,6 @@ public class Day11Part1_Dijkstry implements CalculateI {
                 checked.add(getCheckedPositionString(startPosition, endPosition));
                 checked.add(getCheckedPositionString(endPosition, startPosition));
             }
-
-            System.out.println(i+ " END");
 
         }
 
